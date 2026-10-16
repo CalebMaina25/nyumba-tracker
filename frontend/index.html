@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script>
+    //WARM UP SERVER ON PAGE LOAD
+    fetch("https://nyumba-tracker-1.onrender.com/health").catch(()=>{});
+</script>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>NyumbaTracker - Login</title>
 <link rel="manifest" href="./manifest.json">
@@ -36,7 +40,7 @@
 btnLogin.onclick=()=>{loginForm.classList.remove('hidden');regForm.classList.add('hidden');btnLogin.className='px-6 py-2 bg-white text-black rounded-full font-bold';btnReg.className='px-6 py-2 text-zinc-400 rounded-full'}
 btnReg.onclick=()=>{regForm.classList.remove('hidden');loginForm.classList.add('hidden');btnReg.className='px-6 py-2 bg-white text-black rounded-full font-bold';btnLogin.className='px-6 py-2 text-zinc-400 rounded-full'}
 const API_URL='https://nyumba-tracker-1.onrender.com';
-loginForm.onsubmit=async(e)=>{e.preventDefault();msg.textContent='Logging in...';let r=await fetch(API_URL+'/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:loginPhone.value,password:loginPass.value})});let d=await r.json();if(r.ok){localStorage.setItem('token',d.token);localStorage.setItem('user',JSON.stringify(d.user));location.href='./dashboard.html'}else msg.textContent=d.message}
+loginForm.onsubmit=async(e)=>{e.preventDefault();msg.textContent='Waking server...please wait 30s first time';let r=await fetch(API_URL+'/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:loginPhone.value,password:loginPass.value})});let d=await r.json();if(r.ok){localStorage.setItem('token',d.token);localStorage.setItem('user',JSON.stringify(d.user));location.href='./dashboard.html'}else msg.textContent=d.message}
 regForm.onsubmit=async(e)=>{e.preventDefault();msg.textContent='Creating...';let r=await fetch(API_URL+'/api/auth/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:regName.value,phone:regPhone.value,password:regPass.value})});let d=await r.json();if(r.ok){msg.textContent='Account created! Login now.';btnLogin.click()}else msg.textContent=d.message}
 if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js')}
 </script>
