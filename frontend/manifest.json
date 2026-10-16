@@ -1,4 +1,5 @@
 {
+  "id": "/",
   "name": "NyumbaTracker - Landlord Manager",
   "short_name": "NyumbaTracker",
   "description": "Manage rentals like M-Pesa - Track rent, tenants, M-Pesa payments",
@@ -6,43 +7,37 @@
   "display": "standalone",
   "background_color": "#0a0a0a",
   "theme_color": "#10b981",
-  "orientation": "any",
+  "orientation": "portrait",
   "scope": "/",
   "dir": "ltr",
   "lang": "en",
-  "display_override": ["standalone", "minimal-ui"],
+  "categories": ["business", "finance", "productivity"],
   "icons": [
     {
-      "src": "/icon-192.png",
+      "src": "icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "maskable"
-    },
-    {
-      "src": "/icon-512.png",
+      "src": "icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icon-512.png",
+      "src": "icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
     }
   ],
-  "related_applications": [],
-  "shortcuts": [
+  "screenshots": [
     {
-      "name": "Dashboard",
-      "url": "/dashboard.html",
-      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+      "src": "screenshot-wide.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide"
     }
   ]
 }
