@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dashboard - NyumbaTracker</title>
+<link rel="manifest" href="./manifest.json">
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>body{font-family:system-ui}.scroll-hide::-webkit-scrollbar{display:none}</style>
+</head>
+<body class="bg-[#0a0a0a] text-white min-h-screen flex">
+<!-- SIDEBAR -->
+<aside class="w-72 bg-zinc-900 border-r border-zinc-800 p-6 hidden md:flex flex-col fixed h-screen">
+<div class="flex items-center gap-3 mb-10">
+<img src="./icon-192.png" class="w-10 h-10 rounded-xl"><div><p class="font-bold">NyumbaTracker</p><p class="text-xs text-zinc-500">Smart Landlord OS</p></div>
+</div>
+<nav class="space-y-2 flex-1">
+<a class="flex items-center gap-3 bg-white text-black p-3 rounded-xl font-bold"><i class="fa fa-chart-pie"></i> Dashboard</a>
+<a href="./profile.html" class="flex items-center gap-3 p-3 rounded-xl text-zinc-400 hover:bg-zinc-800"><i class="fa fa-user"></i> Profile & Brand</a>
+<a href="./landing.html" class="flex items-center gap-3 p-3 rounded-xl text-zinc-400 hover:bg-zinc-800"><i class="fa fa-globe"></i> Landing Page</a>
+<a href="./privacy.html" class="flex items-center gap-3 p-3 rounded-xl text-zinc-400"><i class="fa fa-shield"></i> Privacy</a>
+</nav>
+<div class="bg-black p-4 rounded-2xl border border-zinc-800">
+<div class="flex items-center gap-3"><img id="sideAvatar" src="https://api.dicebear.com/7.x/initials/svg?seed=NT" class="w-10 h-10 rounded-full"><div><p id="sideName" class="font-bold text-sm">Landlord</p><p id="sidePhone" class="text-xs text-zinc-500">0712...</p></div></div>
+<button onclick="logout()" class="w-full mt-4 bg-zinc-800 p-2 rounded-xl text-sm">Logout</button>
+</div>
+</aside>
+
+<!-- MAIN -->
+<main class="flex-1 md:ml-72 p-4 md:p-8 pb-24">
+<div class="flex justify-between items-center mb-8">
+<div><h1 class="text-3xl font-black">Habari, <span id="greetName">Landlord</span> 👋</h1><p class="text-zinc-500">Here's what's happening today</p></div>
+<a href="./profile.html" class="md:hidden"><img id="topAvatar" src="https://api.dicebear.com/7.x/initials/svg?seed=NT" class="w-10 h-10 rounded-full"></a>
+</div>
+
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+<div class="bg-gradient-to-br from-green-600 to-green-700 p-6 rounded-[24px]"><p class="text-green-100 text-sm">Total Collected</p><h2 class="text-2xl font-black mt-1" id="statCollected">KES 0</h2><p class="text-xs mt-2 bg-black/20 w-fit px-2 py-1 rounded-full">This Month</p></div>
+<div class="bg-zinc-900 border border-zinc-800 p-6 rounded-[24px]"><p class="text-zinc-500 text-sm">Houses</p><h2 class="text-2xl font-black mt-1" id="statHouses">0</h2><p class="text-xs mt-2 text-zinc-500"><span id="statVacant">0</span> Vacant</p></div>
+<div class="bg-zinc-900 border border-zinc-800 p-6 rounded-[24px]"><p class="text-zinc-500 text-sm">Tenants</p><h2 class="text-2xl font-black mt-1" id="statTenants">0</h2><p class="text-xs mt-2 text-green-400">All active</p></div>
+<div class="bg-zinc-900 border border-zinc-800 p-6 rounded-[24px]"><p class="text-zinc-500 text-sm">Overdue</p><h2 class="text-2xl font-black mt-1 text-red-400" id="statOverdue">0</h2><p class="text-xs mt-2 text-zinc-500">Need SMS</p></div>
+</div>
+
+<div class="flex gap-3 overflow-auto scroll-hide mb-8">
+<button onclick="openModal('house')" class="bg-white text-black px-6 py-3 rounded-full font-bold whitespace-nowrap">+ Add House</button>
+<button onclick="openModal('tenant')" class="bg-zinc-900 border border-zinc-800 px-6 py-3 rounded-full font-bold whitespace-nowrap">+ Add Tenant</button>
+<button onclick="openModal('payment')" class="bg-zinc-900 border border-zinc-800 px-6 py-3 rounded-full font-bold whitespace-nowrap">+ Record Payment</button>
+<button onclick="sendReminders()" class="bg-green-600 px-6 py-3 rounded-full font-bold whitespace-nowrap"><i class="fa fa-paper-plane"></i> Send Reminders</button>
+</div>
+
+<div class="grid md:grid-cols-3 gap-6">
+<div class="md:col-span-2 bg-zinc-900 border border-zinc-800 rounded-[24px] p-6">
+<div class="flex justify-between items-center mb-6"><h3 class="font-bold text-lg">My Houses</h3><span id="houseCount" class="bg-zinc-800 px-3 py-1 rounded-full text-xs">0</span></div>
+<div id="houseList" class="space-y-3">Loading...</div>
+</div>
+<div class="bg-zinc-900 border border-zinc-800 rounded-[24px] p-6">
+<div class="flex justify-between items-center mb-6"><h3 class="font-bold">Recent Tenants</h3><button onclick="openModal('tenant')" class="text-xs bg-white text-black px-3 py-1 rounded-full">Add</button></div>
+<div id="tenantList" class="space-y-3">Loading...</div>
+</div>
+</div>
+</main>
+
+<script>
+const API_URL='https://nyumba-tracker-1.onrender.com';
+const token=localStorage.getItem('token');
+if(!token) location.href='./index.html';
+const user=JSON.parse(localStorage.getItem('user')||'{}');
+document.getElementById('greetName').textContent=user.name?.split(' ')[0]||'Landlord';
+document.getElementById('sideName').textContent=user.name||'Landlord';
+document.getElementById('sidePhone').textContent=user.phone||'';
+if(localStorage.getItem('avatar')){document.getElementById('sideAvatar').src=localStorage.getItem('avatar');document.getElementById('topAvatar').src=localStorage.getItem('avatar');}
+
+async function load(){
+let [h,t,p]=await Promise.all([
+ fetch(API_URL+'/api/houses',{headers:{Authorization:'Bearer '+token}}).then(r=>r.json()).catch(()=>[]),
+ fetch(API_URL+'/api/tenants',{headers:{Authorization:'Bearer '+token}}).then(r=>r.json()).catch(()=>[]),
+ fetch(API_URL+'/api/payments',{headers:{Authorization:'Bearer '+token}}).then(r=>r.json()).catch(()=>[])
+]);
+renderHouses(Array.isArray(h)?h:h.houses||[]);
+renderTenants(Array.isArray(t)?t:t.tenants||[]);
+let total=(Array.isArray(p)?p:p.payments||[]).reduce((s,x)=>s+Number(x.amount||0),0);
+document.getElementById('statCollected').textContent='KES '+total.toLocaleString();
+document.getElementById('statHouses').textContent=(Array.isArray(h)?h.length:(h.houses||[]).length);
+document.getElementById('statTenants').textContent=(Array.isArray(t)?t.length:(t.tenants||[]).length);
+}
+function renderHouses(houses){
+let overdue=houses.filter(x=>x.status==='overdue').length;
+document.getElementById('statOverdue').textContent=overdue;
+document.getElementById('statVacant').textContent=houses.filter(x=>x.status==='vacant').length;
+document.getElementById('houseCount').textContent=houses.length+' units';
+document.getElementById('houseList').innerHTML=houses.length?houses.map(h=>`
+<div class="flex justify-between items-center bg-black p-4 rounded-2xl border border-zinc-800">
+<div class="flex items-center gap-3"><div class="w-12 h-12 rounded-xl bg-zinc-800 flex items-center justify-center">🏠</div><div><p class="font-bold">${h.houseNumber||h.name}</p><p class="text-xs text-zinc-500">${h.rentAmount? 'KES '+h.rentAmount+'/mo' : h.status}</p></div></div>
+<span class="text-xs px-3 py-1 rounded-full ${h.status==='paid'?'bg-green-900 text-green-400':h.status==='overdue'?'bg-red-900 text-red-400':'bg-zinc-800 text-zinc-400'}">${h.status||'vacant'}</span>
+</div>`).join(''):'<p class="text-zinc-500 text-sm">No houses yet. Click + Add House</p>';
+}
+function renderTenants(tenants){
+document.getElementById('tenantList').innerHTML=tenants.length?tenants.slice(0,5).map(t=>`
+<div class="flex justify-between items-center bg-black p-3 rounded-xl"><div><p class="font-bold text-sm">${t.name}</p><p class="text-xs text-zinc-500">${t.houseNumber||''} • ${t.phone||''}</p></div><span class="text-xs text-green-400">${t.balance!=null?'Bal '+t.balance:''}</span></div>`).join(''):'<p class="text-zinc-500 text-sm">No tenants</p>';
+}
+async function openModal(type){
+if(type==='house'){
+ let num=prompt('House Number / Name? e.g. A1'); if(!num) return;
+ let rent=prompt('Monthly Rent? e.g. 8000'); if(!rent) return;
+ await fetch(API_URL+'/api/houses',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},body:JSON.stringify({houseNumber:num,rentAmount:rent,status:'vacant'})}); load();
+}
+if(type==='tenant'){
+ let name=prompt('Tenant Full Name?'); if(!name) return;
+ let phone=prompt('Tenant Phone?'); if(!phone) return;
+ let house=prompt('House Number? (must exist)');
+ await fetch(API_URL+'/api/tenants',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},body:JSON.stringify({name,phone,houseNumber:house})}); load();
+}
+if(type==='payment'){
+ let house=prompt('House Number paying for?'); if(!house) return;
+ let amt=prompt('Amount paid?'); if(!amt) return;
+ await fetch(API_URL+'/api/payments',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},body:JSON.stringify({houseNumber:house,amount:amt})}); load();
+}
+}
+function sendReminders(){alert('SMS Reminders sent!');}
+function logout(){localStorage.clear();location.href='./index.html';}
+load();
+</script>
+</body>
+</html>

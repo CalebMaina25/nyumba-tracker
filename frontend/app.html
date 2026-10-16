@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NyumbaTracker - Smart Landlord</title>
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#0a0a0a">
+<link rel="icon" href="./icon-192.png">
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+:root{--black:#0a0a0a;--orange:#ff7a00;--gray:#f6f6f7;--green:#00b56a;--red:#ff3b30;--wa:#25D366}
+*{box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif}
+body{margin:0;background:var(--gray);color:#111;padding-bottom:90px}
+.header{background:var(--black);color:#fff;padding:18px 16px;position:sticky;top:0;z-index:10;display:flex;align-items:center;justify-content:space-between}
+.header h1{margin:0;font-size:20px;letter-spacing:-0.5px;display:flex;align-items:center;gap:10px}
+.header h1 span{background:var(--orange);width:32px;height:32px;display:grid;place-items:center;border-radius:8px}
+.status{font-size:12px;padding:6px 10px;border-radius:20px;background:#1a1a1a;color:#9a9a9a}
+.status.online{color:var(--green);background:#e7f8f0}
+.container{padding:12px;max-width:480px;margin:auto}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+.stat{background:#fff;padding:14px;border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,0.04)}
+.stat small{color:#888;font-size:11px;text-transform:uppercase;letter-spacing:0.5px}
+.stat b{font-size:18px;display:block;margin-top:4px}
+.card{background:#fff;border-radius:18px;padding:16px;margin:12px 0;box-shadow:0 4px 18px rgba(0,0,0,0.06)}
+.card h3{margin:0 0 12px;font-size:16px}
+input,select{width:100%;padding:13px 14px;border:1.5px solid #eee;border-radius:12px;margin:6px 0;font-size:14px;outline:none;background:#fff}
+input:focus,select:focus{border-color:var(--black)}
+.btn{width:100%;padding:14px;border:none;border-radius:12px;font-weight:600;font-size:14px;cursor:pointer;margin-top:8px}
+.btn-black{background:var(--black);color:#fff}
+.btn-orange{background:var(--orange);color:#fff}
+.btn-ghost{background:#f0f0f0;color:#333}
+.badge{font-size:11px;padding:4px 8px;border-radius:20px;font-weight:600}
+.badge-paid{background:#e7f8f0;color:var(--green)}
+.badge-due{background:#ffeaea;color:var(--red)}
+.search{position:sticky;top:62px;z-index:5;background:var(--gray);padding:8px 0}
+.row{display:flex;gap:6px;margin:8px 0}
+.tenant{padding:14px;border-bottom:1px solid #f0f0f0}
+.action-btn{flex:1;padding:8px 6px;border:none;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer}
+.call{background:#eef2ff;color:#3b5bff}
+.wa{background:#e7f8f0;color:var(--wa)}
+.mpesa{background:var(--black);color:#fff}
+.delete{background:#ffeaea;color:var(--red)}
+.nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #eee;display:flex;justify-content:space-around;padding:10px 0}
+.nav button{background:none;border:none;font-size:11px;color:#999}
+.nav button.active{color:var(--black);font-weight:700}
+.settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+</style>
+</head>
+<body>
+<div class="header">
+<h1><span>🏠</span> NyumbaTracker</h1>
+<div id="onlineStatus" class="status">Online</div>
+</div>
+
+<div class="container">
+<div class="stats">
+<div class="stat"><small>Total Tenants</small><b id="totalTenants">0</b></div>
+<div class="stat"><small>Monthly Rent</small><b id="totalRent">KES 0</b></div>
+<div class="stat"><small>Collected</small><b id="collected" style="color:var(--green)">KES 0</b></div>
+<div class="stat"><small>Due</small><b id="due" style="color:var(--red)">KES 0</b></div>
+</div>
+
+<!-- NEW SETTINGS CARD -->
+<div class="card" style="border:2px solid var(--orange)">
+<h3>⚙️ My Payment Settings (Save Once)</h3>
+<p style="font-size:12px;color:#888;margin:0 0 10px">This will be used in WhatsApp reminders automatically</p>
+<label style="font-size:12px;font-weight:600">Default Method</label>
+<select id="defaultMethod">
+<option value="M-Pesa Paybill">M-Pesa Paybill</option>
+<option value="M-Pesa Till">M-Pesa Till / Buy Goods</option>
+<option value="M-Pesa Send Money">M-Pesa Send Money</option>
+<option value="Bank">Bank Transfer</option>
+<option value="Cash">Cash</option>
+<option value="Mixed">Mixed / Any</option>
+</select>
+<div class="settings-grid">
+<input id="paybillNo" placeholder="Paybill e.g. 123456">
+<input id="accountNo" placeholder="Acc No. e.g. A5 or HOUSE">
+</div>
+<input id="tillNo" placeholder="Till No e.g. 543210 (if Till)">
+<input id="bankInfo" placeholder="Bank e.g. Equity 01234... (if Bank)">
+<input id="landlordName" placeholder="Your Name e.g. Caleb">
+<button class="btn btn-orange" id="saveSettingsBtn">💾 Save Settings</button>
+<p id="settingsSaved" style="font-size:12px;color:var(--green);display:none;margin-top:8px">✅ Settings saved! WhatsApp messages will include it.</p>
+</div>
+
+<div class="card">
+<h3>➕ Add Tenant</h3>
+<input id="nameInput" placeholder="Name - e.g. John Kamau">
+<input id="houseNoInput" placeholder="House No - A5">
+<input id="phoneInput" placeholder="Phone - 0712345678">
+<input id="rentInput" type="number" placeholder="Rent - 8000">
+<button class="btn btn-black" id="addTenantBtn">Add Tenant</button>
+</div>
+
+<div class="card">
+<h3>📊 Bulk Upload Excel</h3>
+<p style="font-size:12px;color:#888;margin:0 0 8px">Columns: Name, House No, Phone, Rent</p>
+<input type="file" id="excelFile" accept=".xlsx,.xls,.csv">
+<button class="btn btn-orange" id="uploadExcelBtn">Upload Excel</button>
+</div>
+
+<div class="search">
+<input id="searchInput" placeholder="🔍 Search name, house, phone...">
+</div>
+
+<div class="card">
+<h3>🏘️ Tenants List</h3>
+<div id="tenantsList"></div>
+</div>
+</div>
+
+<div class="nav">
+<button class="active">🏠<br>Tenants</button>
+<button onclick="document.getElementById('paybillNo').scrollIntoView({behavior:'smooth'})">⚙️<br>Settings</button>
+<button onclick="localStorage.removeItem('nyumba_verified'); window.location.href='./index.html'">🚪<br>Logout</button>
+</div>
+
+<script>
+  if(localStorage.getItem('nyumba_verified')!=='true'){window.location.href='./index.html';}
+let tenants = JSON.parse(localStorage.getItem('nyumba_tenants') || '[]');
+let settings = JSON.parse(localStorage.getItem('nyumba_settings') || '{}');
+
+const els = {
+ name: document.getElementById('nameInput'),
+ house: document.getElementById('houseNoInput'),
+ phone: document.getElementById('phoneInput'),
+ rent: document.getElementById('rentInput'),
+ list: document.getElementById('tenantsList'),
+ search: document.getElementById('searchInput'),
+ totalT: document.getElementById('totalTenants'),
+ totalR: document.getElementById('totalRent'),
+ coll: document.getElementById('collected'),
+ due: document.getElementById('due'),
+ status: document.getElementById('onlineStatus'),
+ excel: document.getElementById('excelFile'),
+ defMethod: document.getElementById('defaultMethod'),
+ paybill: document.getElementById('paybillNo'),
+ acc: document.getElementById('accountNo'),
+ till: document.getElementById('tillNo'),
+ bank: document.getElementById('bankInfo'),
+ landlord: document.getElementById('landlordName'),
+};
+
+function save(){ localStorage.setItem('nyumba_tenants', JSON.stringify(tenants)); localStorage.setItem('nyumba_settings', JSON.stringify(settings)); }
+
+function loadSettings(){
+ if(settings.defMethod) els.defMethod.value = settings.defMethod;
+ if(settings.paybill) els.paybill.value = settings.paybill;
+ if(settings.account) els.acc.value = settings.account;
+ if(settings.till) els.till.value = settings.till;
+ if(settings.bank) els.bank.value = settings.bank;
+ if(settings.landlord) els.landlord.value = settings.landlord;
+}
+loadSettings();
+
+document.getElementById('saveSettingsBtn').addEventListener('click',()=>{
+ settings = {
+  defMethod: els.defMethod.value,
+  paybill: els.paybill.value.trim(),
+  account: els.acc.value.trim(),
+  till: els.till.value.trim(),
+  bank: els.bank.value.trim(),
+  landlord: els.landlord.value.trim()
+ };
+ save();
+ document.getElementById('settingsSaved').style.display='block';
+ setTimeout(()=>document.getElementById('settingsSaved').style.display='none',3000);
+});
+
+function updateStats(){
+  const totalRent = tenants.reduce((s,t)=> s + (Number(t.rent)||0),0);
+  const paid = tenants.filter(t=>t.paid).reduce((s,t)=> s + (Number(t.rent)||0),0);
+  els.totalT.innerText = tenants.length;
+  els.totalR.innerText = 'KES ' + totalRent.toLocaleString();
+  els.coll.innerText = 'KES ' + paid.toLocaleString();
+  els.due.innerText = 'KES ' + (totalRent-paid).toLocaleString();
+}
+
+function getPaymentInstructions(houseNo){
+  if(!settings.defMethod) return 'Tafadhali tuma rent.';
+  let msg = '';
+  if(settings.defMethod.includes('Paybill')){
+    msg = `Tuma kwa M-Pesa Paybill ${settings.paybill || '[Paybill]'} Acc: ${houseNo || settings.account || 'House No'}.`;
+  } else if(settings.defMethod.includes('Till')){
+    msg = `Tuma kwa M-Pesa Till ${settings.till || '[Till]'} (Buy Goods).`;
+  } else if(settings.defMethod.includes('Send Money')){
+    msg = `Tuma kwa M-Pesa Send Money kwa ${settings.landlord || 'landlord'} - ${els.paybill.value || 'number'}.`;
+  } else if(settings.defMethod.includes('Bank')){
+    msg = `Tuma kwa Bank: ${settings.bank || '[Bank Details]'} Ref: ${houseNo}.`;
+  } else if(settings.defMethod==='Cash'){
+    msg = `Lipa Cash kwa ${settings.landlord || 'landlord'}.`;
+  } else {
+    msg = `Lipa rent - ${settings.defMethod}.`;
+  }
+  return msg;
+}
+
+function render(){
+  const q = (els.search.value||'').toLowerCase();
+  const filtered = tenants.filter(t=> `${t.name} ${t.houseNo} ${t.phone}`.toLowerCase().includes(q));
+  if(filtered.length===0){ els.list.innerHTML='<p style="text-align:center;color:#999;padding:20px;font-size:13px">No tenants</p>'; updateStats(); return; }
+  els.list.innerHTML = filtered.map((t,idx)=>{
+    const realIdx = tenants.indexOf(t);
+    const phoneClean = t.phone.replace(/\s|\+/g,'').replace(/^0/,'254');
+    return `<div class="tenant">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div><b>${t.name}</b> <small style="color:#888">• ${t.houseNo}</small><br><small>KES ${t.rent} • ${t.phone} ${t.mpesa? '• '+t.mpesa:''} ${t.lastMethod? '• '+t.lastMethod:''}</small></div>
+        <span class="badge ${t.paid?'badge-paid':'badge-due'}">${t.paid? (t.lastMethod||'PAID') : 'DUE'}</span>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <button class="action-btn call" onclick="callTenant('${t.phone}')">📞 Call</button>
+        <button class="action-btn wa" onclick="whatsappTenant('${phoneClean}','${t.name}','${t.houseNo}')">💬 WhatsApp</button>
+        <button class="action-btn mpesa" onclick="paymentTenant(${realIdx})">💰 ${t.paid? '✓':'Pay'}</button>
+        <button class="action-btn delete" onclick="deleteTenant(${realIdx})">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+  updateStats(); save();
+}
+
+window.callTenant = (phone)=>{ window.location.href = 'tel:'+phone; }
+window.whatsappTenant = (phoneClean,name,houseNo)=>{
+  const instructions = getPaymentInstructions(houseNo);
+  const landlord = settings.landlord? ` - ${settings.landlord}` : '';
+  const msg = encodeURIComponent(`Habari ${name},\n\nRent yako ya KES ${tenants.find(t=>t.name===name)?.rent || ''} ya nyumba ${houseNo} bado.\n\n${instructions}\n\nAsante${landlord}\n_NyumbaTracker_`);
+  window.open(`https://wa.me/${phoneClean}?text=${msg}`,'_blank');
+}
+window.paymentTenant = (idx)=>{
+  const t = tenants[idx];
+  const method = prompt(`Payment method for ${t.name}?\n1=M-Pesa 2=Bank 3=Cash 4=Other\nCurrent default: ${settings.defMethod || 'M-Pesa'}`, t.lastMethod || settings.defMethod || 'M-Pesa');
+  if(method===null) return;
+  let methodName = method.trim();
+  if(methodName==='1') methodName='M-Pesa';
+  if(methodName==='2') methodName='Bank';
+  if(methodName==='3') methodName='Cash';
+  if(methodName==='4') methodName='Other';
+  if(methodName==='') methodName='M-Pesa';
+  let ref = '';
+  if(methodName.toLowerCase()==='cash'){
+    ref = 'CASH '+ new Date().toLocaleDateString();
+  } else {
+    ref = prompt(`Enter ${methodName} Code/Ref for ${t.name} (House ${t.houseNo}):`, t.mpesa||'');
+    if(ref===null) return;
+  }
+  tenants[idx].paid = true;
+  tenants[idx].mpesa = (ref||methodName).toUpperCase().trim();
+  tenants[idx].lastMethod = methodName;
+  tenants[idx].paidDate = new Date().toLocaleDateString();
+  render();
+}
+window.deleteTenant = (idx)=>{ if(confirm('Delete '+tenants[idx].name+'?')){ tenants.splice(idx,1); render(); } }
+
+document.getElementById('addTenantBtn').addEventListener('click',()=>{
+  if(!els.name.value.trim()||!els.house.value.trim()){ alert('Name and House No required'); return; }
+  tenants.push({name:els.name.value.trim(),houseNo:els.house.value.trim(),phone:els.phone.value.trim(),rent:els.rent.value.trim()||0,paid:false});
+  els.name.value=els.house.value=els.phone.value=els.rent.value=''; render();
+});
+els.search.addEventListener('input',render);
+document.getElementById('uploadExcelBtn').addEventListener('click',()=>{
+  const file = els.excel.files[0];
+  if(!file){ alert('Choose Excel file'); return; }
+  const reader = new FileReader();
+  reader.onload = (e)=>{
+    try{
+      const data = new Uint8Array(e.target.result);
+      const wb = XLSX.read(data,{type:'array'});
+      const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''});
+      let added=0;
+      rows.forEach(r=>{
+        const lower={}; for(let k in r) lower[k.toLowerCase().trim()]=r[k];
+        const name = lower['name']||lower['tenant']||'';
+        const houseNo = lower['house no']||lower['house']||lower['unit']||'';
+        const phone = lower['phone']||lower['mobile']||'';
+        const rent = lower['rent']||lower['amount']||0;
+        if(name){ tenants.push({name:String(name).trim(),houseNo:String(houseNo).trim(),phone:String(phone).trim(),rent:String(rent).trim(),paid:false}); added++; }
+      });
+      render(); alert(`${added} tenants imported`); els.excel.value='';
+    }catch(err){ alert('Error: '+err.message); }
+  };
+  reader.readAsArrayBuffer(file);
+});
+render();
+setInterval(()=>{
+  const online = navigator.onLine;
+  els.status.innerText = online? 'Online - Synced' : 'Offline';
+  els.status.className = online? 'status online':'status';
+},2000);
+if ('serviceWorker' in navigator && location.protocol === 'https:') {
+  window.addEventListener('load', ()=>{ navigator.serviceWorker.register('./sw.js').catch(()=>{}); });
+}
+</script>
+</body>
+</html>

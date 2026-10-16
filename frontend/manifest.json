@@ -1,0 +1,58 @@
+{
+    "id": "/?pwa=1",
+    "name": "NyumbaTracker - Landlord Manager",
+    "short_name": "NyumbaTracker",
+    "description": "Manage tenants, rent collection, houses and reports - Smart Landlord System",
+    "start_url": "./landing.html",
+    "display": "standalone",
+    "background_color": "#0f0f0f",
+    "theme_color": "#0f0f0f",
+    "orientation": "portrait",
+    "scope": "/",
+    "lang": "en",
+    "dir": "1tr",
+    "categories": ["business", "productivity", "finance"],
+    "prefer_related_applications": false,
+    "icons": [
+      {
+        "src": "https://cdn-icons-png.flaticon.com/512/263/263115.png",
+        "sizes": "512x512",
+        "type": "image/png",
+        "purpose": "any"
+      },
+      {
+        "src": "https://cdn-icons-png.flaticon.com/512/263/263115.png",
+        "sizes": "512x512",
+        "type": "image/png",
+        "purpose": "maskable"
+      },
+      {
+        "src": "https://cdn-icons-png.flaticon.com/512/263/263115.png",
+        "sizes": "192x192",
+        "type": "image/png",
+        "purpose": "any"
+      },
+      {
+        "src": "https://cdn-icons-png.flaticon.com/512/263/263115.png",
+        "sizes": "192x192",
+        "type": "image/png",
+        "purpose": "maskable"
+      }
+    ],
+    "screenshots":[
+      {
+        "src": "https://cdn-icons-png.flaticon.com/512/263/263115.png",
+        "sizes": "512x512",
+        "type": "image/png",
+        "form_factor": "narrow",
+        "label": "NyumbaTracker Login"
+      },
+      {
+        "src": "https://cdn-icons-png.flaticon.com/512/263/263115.png",
+        "sizes": "512x512",
+        "type": "image/png",
+        "form_factor": "wide",
+        "label":"NyumbaTracker Dashboard"
+      }
+    ]
+  }

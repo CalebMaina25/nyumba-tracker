@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NyumbaTracker - Login</title>
+<link rel="manifest" href="./manifest.json">
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-[#0a0a0a] min-h-screen flex items-center justify-center p-4">
+<div class="w-full max-w-5xl bg-zinc-900 border border-zinc-800 rounded-[32px] grid md:grid-cols-2 overflow-hidden">
+<div class="p-10 bg-gradient-to-br from-green-600 to-green-800 flex flex-col justify-between">
+<h1 class="text-4xl font-black">Karibu,<br>Landlord.</h1>
+<div class="mt-20 bg-black/20 backdrop-blur p-4 rounded-2xl">
+<p class="text-sm">“I stopped using Excel. Now I know which tenant paid in 2 seconds.”</p>
+<p class="text-xs mt-2 opacity-70">- Mama Njeri, Kayole - 18 houses</p>
+</div>
+</div>
+<div class="p-10">
+<div class="flex gap-2 mb-8 bg-black p-1 rounded-full w-fit"><button id="btnLogin" class="px-6 py-2 bg-white text-black rounded-full font-bold">Login</button><button id="btnReg" class="px-6 py-2 text-zinc-400 rounded-full">Register</button></div>
+<form id="loginForm" class="space-y-4">
+<input id="loginPhone" placeholder="Phone e.g. 0712..." class="w-full p-4 rounded-xl bg-black border border-zinc-800 text-white">
+<input id="loginPass" type="password" placeholder="Password" class="w-full p-4 rounded-xl bg-black border border-zinc-800 text-white">
+<button class="w-full bg-white text-black p-4 rounded-xl font-bold">Login →</button>
+</form>
+<form id="regForm" class="space-y-4 hidden">
+<input id="regName" placeholder="Business Name" class="w-full p-4 rounded-xl bg-black border border-zinc-800 text-white">
+<input id="regPhone" placeholder="Phone" class="w-full p-4 rounded-xl bg-black border border-zinc-800 text-white">
+<input id="regPass" type="password" placeholder="Create Password" class="w-full p-4 rounded-xl bg-black border border-zinc-800 text-white">
+<button class="w-full bg-green-600 p-4 rounded-xl font-bold">Create Account</button>
+</form>
+<p id="msg" class="text-center mt-4 text-sm text-red-400"></p>
+<a href="./landing.html" class="block text-center mt-6 text-zinc-500 text-sm">← Back to Home</a>
+</div>
+</div>
+<script>
+btnLogin.onclick=()=>{loginForm.classList.remove('hidden');regForm.classList.add('hidden');btnLogin.className='px-6 py-2 bg-white text-black rounded-full font-bold';btnReg.className='px-6 py-2 text-zinc-400 rounded-full'}
+btnReg.onclick=()=>{regForm.classList.remove('hidden');loginForm.classList.add('hidden');btnReg.className='px-6 py-2 bg-white text-black rounded-full font-bold';btnLogin.className='px-6 py-2 text-zinc-400 rounded-full'}
+const API_URL='https://nyumba-tracker-1.onrender.com';
+loginForm.onsubmit=async(e)=>{e.preventDefault();msg.textContent='Logging in...';let r=await fetch(API_URL+'/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:loginPhone.value,password:loginPass.value})});let d=await r.json();if(r.ok){localStorage.setItem('token',d.token);localStorage.setItem('user',JSON.stringify(d.user));location.href='./dashboard.html'}else msg.textContent=d.message}
+regForm.onsubmit=async(e)=>{e.preventDefault();msg.textContent='Creating...';let r=await fetch(API_URL+'/api/auth/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:regName.value,phone:regPhone.value,password:regPass.value})});let d=await r.json();if(r.ok){msg.textContent='Account created! Login now.';btnLogin.click()}else msg.textContent=d.message}
+if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js')}
+</script>
+</body>
+</html>

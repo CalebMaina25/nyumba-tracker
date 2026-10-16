@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><script src="https://cdn.tailwindcss.com"></script><title>Profile</title></head>
+<body class="bg-[#0a0a0a] text-white p-6 max-w-2xl mx-auto">
+<a href="./dashboard.html" class="text-zinc-500">← Dashboard</a>
+<h1 class="text-3xl font-bold mt-6">Profile & Branding</h1>
+<div class="mt-8 bg-zinc-900 border border-zinc-800 p-8 rounded-3xl space-y-6">
+<div class="flex items-center gap-6">
+<img id="avatar" src="https://api.dicebear.com/7.x/initials/svg?seed=NT" class="w-24 h-24 rounded-full bg-black">
+<div><input type="file" id="photoInput" accept="image/*" class="text-sm"><p class="text-xs text-zinc-500 mt-2">Your photo shows on receipts</p></div>
+</div>
+<input id="businessName" placeholder="Business Name" class="w-full p-4 rounded-xl bg-black border border-zinc-800">
+<input id="phone" placeholder="Phone" class="w-full p-4 rounded-xl bg-black border border-zinc-800">
+<button onclick="saveProfile()" class="w-full bg-green-600 p-4 rounded-xl font-bold">Save Profile</button>
+<p id="pmsg" class="text-center text-green-400"></p>
+<button onclick="localStorage.clear();location.href='./index.html'" class="w-full mt-4 bg-red-900/50 p-4 rounded-xl">Logout</button>
+</div>
+<script>
+let user=JSON.parse(localStorage.getItem('user')||'{}');
+businessName.value=user.name||''; phone.value=user.phone||'';
+photoInput.onchange=e=>{let r=new FileReader();r.onload=()=>{avatar.src=r.result;localStorage.setItem('avatar',r.result)};r.readAsDataURL(e.target.files[0])}
+if(localStorage.getItem('avatar')) avatar.src=localStorage.getItem('avatar');
+function saveProfile(){user.name=businessName.value;user.phone=phone.value;localStorage.setItem('user',JSON.stringify(user));pmsg.textContent='Saved!';}
+</script>
+</body></html>
