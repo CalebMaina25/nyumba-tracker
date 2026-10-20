@@ -55,29 +55,52 @@ async function login(){
   const btn = document.getElementById('loginBtn');
   const msg = document.getElementById('msg');
   const warm = document.getElementById('warmMsg');
-  
+  const name = document.getElementById('nameInput').value.trim();
+  const pass = document.getElementById('passInput').value.trim();
+
+  if(!name || !pass){ msg.innerText = "Enter name & password"; return; }
+
   btn.disabled = true;
-  btn.innerText = "Waking server...";
-  warm.innerText = "Please wait - Render is waking up (30 sec first time)";
+  btn.innerText = "Waking server... 15s";
+  warm.innerText = "First login after sleep takes 30-50s, please wait...";
+  msg.innerText = "";
 
   try{
-    const res = await fetch(API+"/api/auth/login",{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({
-        name: document.getElementById('nameInput').value,
-        password: document.getElementById('passInput').value
-      })
-    });
-    const data = await res.json();
-    if(!res.ok) throw new Error(data.message);
+    // Try 2 times if server sleeping
+    let res;
+    for(let attempt=1; attempt<=2; attempt++){
+      try{
+        res = await fetch(API+"/api/auth/login",{
+          method:"POST",
+          headers:{"Content-Type":"application/json"},
+          body: JSON.stringify({ name, password: pass })
+        });
+        break;
+      }catch(e){
+        if(attempt==1){ await new Promise(r=>setTimeout(r, 8000)); }
+        else throw e;
+      }
+    }
+
+    const text = await res.text(); // read as text first to avoid JSON error
+    if(!text){ throw new Error("Server is waking up. Wait 30s then click Login again"); }
+    
+    let data;
+    try{ data = JSON.parse(text); }
+    catch{ throw new Error("Server waking... wait 20s and try again. Got: "+text.slice(0,100)); }
+
+    if(!res.ok) throw new Error(data.message || "Login failed");
+
     localStorage.setItem('user', JSON.stringify(data));
+    btn.innerText = "Success! →";
     location.href = "dashboard.html";
+
   }catch(e){
+    console.error(e);
     msg.innerText = e.message;
     btn.disabled = false;
     btn.innerText = "Login →";
-    warm.innerText = "Tip: Wait 30s and try again - free server sleeps";
+    warm.innerText = "Tip: Server sleeps on free plan. Click Login again in 20s";
   }
 }
 // Keep alive every 14 mins
