@@ -5,106 +5,78 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>NyumbaTracker</title>
 <script>
-// WARM SERVER IMMEDIATELY - FIXES SLOW LOGIN
 fetch("https://nyumba-tracker-1.onrender.com/health").catch(()=>{});
-fetch("https://nyumba-tracker-1.onrender.com/").catch(()=>{});
 </script>
 <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-100 flex items-center justify-center p-4">
-  
-<div class="max-w-5xl w-full grid md:grid-cols-2 gap-0 rounded-[2rem] overflow-hidden shadow-2xl bg-white">
-  
-  <!-- LEFT - Colorful -->
-  <div class="bg-gradient-to-br from-emerald-500 to-teal-600 p-10 text-white flex flex-col justify-between">
-    <div>
-      <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-emerald-600 text-2xl font-bold mb-6">N</div>
-      <h1 class="text-4xl font-black leading-tight">Karibu,<br>Landlord.</h1>
-      <p class="mt-4 opacity-90">Manage rentals like M-Pesa. Fast, colorful, simple.</p>
-    </div>
-    <div class="mt-10 bg-white/20 backdrop-blur rounded-2xl p-4">
-      <p class="text-sm">✓ M-Pesa auto-tracking<br>✓ Tenant reminders<br>✓ Instant receipts</p>
-    </div>
+<div class="max-w-5xl w-full grid md:grid-cols-2 rounded-[2rem] overflow-hidden shadow-2xl bg-white">
+  <div class="bg-gradient-to-br from-emerald-500 to-teal-600 p-10 text-white">
+    <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-emerald-600 font-bold mb-6">N</div>
+    <h1 class="text-4xl font-black">Karibu,<br>Landlord.</h1>
+    <p class="mt-4 opacity-90">Manage rentals like M-Pesa.</p>
   </div>
-
-  <!-- RIGHT - Login -->
-  <div class="p-10 bg-white">
-    <div class="flex gap-4 mb-6">
-      <button id="loginTab" class="font-bold border-b-2 border-emerald-500 pb-1">Login</button>
-      <button id="regTab" class="text-gray-400">Register</button>
+  <div class="p-10">
+    <div class="flex gap-6 mb-6">
+      <button id="loginTab" onclick="switchMode('login')" class="font-bold border-b-2 border-emerald-500 pb-1">Login</button>
+      <button id="regTab" onclick="switchMode('register')" class="text-gray-400 pb-1">Register</button>
     </div>
-
     <input id="nameInput" placeholder="Full Name" class="w-full bg-gray-50 border rounded-xl px-4 py-3 mb-3">
+    <input id="emailInput" placeholder="Email" class="w-full bg-gray-50 border rounded-xl px-4 py-3 mb-3 hidden">
     <input id="passInput" type="password" placeholder="Password" class="w-full bg-gray-50 border rounded-xl px-4 py-3 mb-4">
-
-    <button id="loginBtn" onclick="login()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 rounded-xl transition">
-      Login →
-    </button>
-    
-    <p id="msg" class="text-center mt-3 text-sm text-gray-500"></p>
-    <p id="warmMsg" class="text-center mt-2 text-xs text-emerald-600">Server warming up... first login takes 20s ⏳</p>
-    
+    <button id="actionBtn" onclick="handleAuth()" class="w-full bg-emerald-500 text-white font-bold py-3 rounded-xl">Login →</button>
+    <p id="msg" class="text-center mt-3 text-sm text-red-500"></p>
+    <p id="warmMsg" class="text-center mt-2 text-xs text-emerald-600">First click may take 30s - server sleeps on free plan</p>
     <a href="landing.html" class="block text-center mt-6 text-sm text-gray-400">← Back to Home</a>
   </div>
 </div>
-
 <script>
 const API = "https://nyumba-tracker-1.onrender.com";
-
-async function login(){
-  const btn = document.getElementById('loginBtn');
-  const msg = document.getElementById('msg');
-  const warm = document.getElementById('warmMsg');
-  const name = document.getElementById('nameInput').value.trim();
-  const pass = document.getElementById('passInput').value.trim();
-
-  if(!name || !pass){ msg.innerText = "Enter name & password"; return; }
-
-  btn.disabled = true;
-  btn.innerText = "Waking server... 15s";
-  warm.innerText = "First login after sleep takes 30-50s, please wait...";
-  msg.innerText = "";
-
-  try{
-    // Try 2 times if server sleeping
-    let res;
-    for(let attempt=1; attempt<=2; attempt++){
-      try{
-        res = await fetch(API+"/api/auth/login",{
-          method:"POST",
-          headers:{"Content-Type":"application/json"},
-          body: JSON.stringify({ name, password: pass })
-        });
-        break;
-      }catch(e){
-        if(attempt==1){ await new Promise(r=>setTimeout(r, 8000)); }
-        else throw e;
-      }
-    }
-
-    const text = await res.text(); // read as text first to avoid JSON error
-    if(!text){ throw new Error("Server is waking up. Wait 30s then click Login again"); }
-    
-    let data;
-    try{ data = JSON.parse(text); }
-    catch{ throw new Error("Server waking... wait 20s and try again. Got: "+text.slice(0,100)); }
-
-    if(!res.ok) throw new Error(data.message || "Login failed");
-
-    localStorage.setItem('user', JSON.stringify(data));
-    btn.innerText = "Success! →";
-    location.href = "dashboard.html";
-
-  }catch(e){
-    console.error(e);
-    msg.innerText = e.message;
-    btn.disabled = false;
-    btn.innerText = "Login →";
-    warm.innerText = "Tip: Server sleeps on free plan. Click Login again in 20s";
+let mode='login';
+function switchMode(m){
+  mode=m;
+  document.getElementById('msg').innerText="";
+  if(m=='login'){
+    document.getElementById('loginTab').className="font-bold border-b-2 border-emerald-500 pb-1";
+    document.getElementById('regTab').className="text-gray-400 pb-1";
+    document.getElementById('emailInput').classList.add('hidden');
+    document.getElementById('actionBtn').innerText="Login →";
+  }else{
+    document.getElementById('regTab').className="font-bold border-b-2 border-emerald-500 pb-1";
+    document.getElementById('loginTab').className="text-gray-400 pb-1";
+    document.getElementById('emailInput').classList.remove('hidden');
+    document.getElementById('actionBtn').innerText="Register →";
   }
 }
-// Keep alive every 14 mins
-setInterval(()=>fetch(API+"/health").catch(()=>{}), 14*60*1000);
+function handleAuth(){ mode=='login'?login():register(); }
+async function makeRequest(url, body){
+  let res;
+  for(let i=0;i<2;i++){
+    try{ res=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}); break; }
+    catch{ await new Promise(r=>setTimeout(r,7000)); if(i==1) throw new Error("Server sleeping, wait 30s and try again"); }
+  }
+  const text=await res.text();
+  if(!text) throw new Error("Server waking up, click again in 20s");
+  let data; try{ data=JSON.parse(text); } catch{ throw new Error("Server starting, wait 20s and try again"); }
+  if(!res.ok) throw new Error(data.message||"Failed");
+  return data;
+}
+async function login(){
+  const btn=document.getElementById('actionBtn'), msg=document.getElementById('msg');
+  const name=document.getElementById('nameInput').value.trim(), pass=document.getElementById('passInput').value.trim();
+  if(!name||!pass){ msg.innerText="Enter name & password"; return; }
+  btn.disabled=true; btn.innerText="Waking server...";
+  try{ const data=await makeRequest(API+"/api/auth/login",{name,password:pass}); localStorage.setItem('user',JSON.stringify(data)); location.href="dashboard.html"; }
+  catch(e){ msg.innerText=e.message; btn.disabled=false; btn.innerText="Login →"; }
+}
+async function register(){
+  const btn=document.getElementById('actionBtn'), msg=document.getElementById('msg');
+  const name=document.getElementById('nameInput').value.trim(), email=document.getElementById('emailInput').value.trim(), pass=document.getElementById('passInput').value.trim();
+  if(!name||!pass){ msg.innerText="Enter name & password"; return; }
+  btn.disabled=true; btn.innerText="Creating account...";
+  try{ const payload={name,password:pass}; if(email) payload.email=email; const data=await makeRequest(API+"/api/auth/register",payload); localStorage.setItem('user',JSON.stringify(data)); location.href="dashboard.html"; }
+  catch(e){ msg.innerText=e.message; btn.disabled=false; btn.innerText="Register →"; }
+}
 </script>
 </body>
 </html>
