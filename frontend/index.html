@@ -1,48 +1,87 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NyumbaTracker</title>
 <script>
-    //WARM UP SERVER ON PAGE LOAD
-    fetch("https://nyumba-tracker-1.onrender.com/health").catch(()=>{});
+// WARM SERVER IMMEDIATELY - FIXES SLOW LOGIN
+fetch("https://nyumba-tracker-1.onrender.com/health").catch(()=>{});
+fetch("https://nyumba-tracker-1.onrender.com/").catch(()=>{});
 </script>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>NyumbaTracker - Login</title>
-<link rel="manifest" href="./manifest.json">
 <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-[#0a0a0a] min-h-screen flex items-center justify-center p-4">
-<div class="w-full max-w-5xl bg-zinc-900 border border-zinc-800 rounded-[32px] grid md:grid-cols-2 overflow-hidden">
-<div class="p-10 bg-gradient-to-br from-green-600 to-green-800 flex flex-col justify-between">
-<h1 class="text-4xl font-black">Karibu,<br>Landlord.</h1>
-<div class="mt-20 bg-black/20 backdrop-blur p-4 rounded-2xl">
-<p class="text-sm">“I stopped using Excel. Now I know which tenant paid in 2 seconds.”</p>
-<p class="text-xs mt-2 opacity-70">- Mama Njeri, Kayole - 18 houses</p>
+<body class="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-100 flex items-center justify-center p-4">
+  
+<div class="max-w-5xl w-full grid md:grid-cols-2 gap-0 rounded-[2rem] overflow-hidden shadow-2xl bg-white">
+  
+  <!-- LEFT - Colorful -->
+  <div class="bg-gradient-to-br from-emerald-500 to-teal-600 p-10 text-white flex flex-col justify-between">
+    <div>
+      <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-emerald-600 text-2xl font-bold mb-6">N</div>
+      <h1 class="text-4xl font-black leading-tight">Karibu,<br>Landlord.</h1>
+      <p class="mt-4 opacity-90">Manage rentals like M-Pesa. Fast, colorful, simple.</p>
+    </div>
+    <div class="mt-10 bg-white/20 backdrop-blur rounded-2xl p-4">
+      <p class="text-sm">✓ M-Pesa auto-tracking<br>✓ Tenant reminders<br>✓ Instant receipts</p>
+    </div>
+  </div>
+
+  <!-- RIGHT - Login -->
+  <div class="p-10 bg-white">
+    <div class="flex gap-4 mb-6">
+      <button id="loginTab" class="font-bold border-b-2 border-emerald-500 pb-1">Login</button>
+      <button id="regTab" class="text-gray-400">Register</button>
+    </div>
+
+    <input id="nameInput" placeholder="Full Name" class="w-full bg-gray-50 border rounded-xl px-4 py-3 mb-3">
+    <input id="passInput" type="password" placeholder="Password" class="w-full bg-gray-50 border rounded-xl px-4 py-3 mb-4">
+
+    <button id="loginBtn" onclick="login()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 rounded-xl transition">
+      Login →
+    </button>
+    
+    <p id="msg" class="text-center mt-3 text-sm text-gray-500"></p>
+    <p id="warmMsg" class="text-center mt-2 text-xs text-emerald-600">Server warming up... first login takes 20s ⏳</p>
+    
+    <a href="landing.html" class="block text-center mt-6 text-sm text-gray-400">← Back to Home</a>
+  </div>
 </div>
-</div>
-<div class="p-10">
-<div class="flex gap-2 mb-8 bg-black p-1 rounded-full w-fit"><button id="btnLogin" class="px-6 py-2 bg-white text-black rounded-full font-bold">Login</button><button id="btnReg" class="px-6 py-2 text-zinc-400 rounded-full">Register</button></div>
-<form id="loginForm" class="space-y-4">
-<input id="loginPhone" placeholder="Phone e.g. 0712..." class="w-full p-4 rounded-xl bg-black border border-zinc-800 text-white">
-<input id="loginPass" type="password" placeholder="Password" class="w-full p-4 rounded-xl bg-black border border-zinc-800 text-white">
-<button class="w-full bg-white text-black p-4 rounded-xl font-bold">Login →</button>
-</form>
-<form id="regForm" class="space-y-4 hidden">
-<input id="regName" placeholder="Business Name" class="w-full p-4 rounded-xl bg-black border border-zinc-800 text-white">
-<input id="regPhone" placeholder="Phone" class="w-full p-4 rounded-xl bg-black border border-zinc-800 text-white">
-<input id="regPass" type="password" placeholder="Create Password" class="w-full p-4 rounded-xl bg-black border border-zinc-800 text-white">
-<button class="w-full bg-green-600 p-4 rounded-xl font-bold">Create Account</button>
-</form>
-<p id="msg" class="text-center mt-4 text-sm text-red-400"></p>
-<a href="./landing.html" class="block text-center mt-6 text-zinc-500 text-sm">← Back to Home</a>
-</div>
-</div>
+
 <script>
-btnLogin.onclick=()=>{loginForm.classList.remove('hidden');regForm.classList.add('hidden');btnLogin.className='px-6 py-2 bg-white text-black rounded-full font-bold';btnReg.className='px-6 py-2 text-zinc-400 rounded-full'}
-btnReg.onclick=()=>{regForm.classList.remove('hidden');loginForm.classList.add('hidden');btnReg.className='px-6 py-2 bg-white text-black rounded-full font-bold';btnLogin.className='px-6 py-2 text-zinc-400 rounded-full'}
-const API_URL='https://nyumba-tracker-1.onrender.com';
-loginForm.onsubmit=async(e)=>{e.preventDefault();msg.textContent='Waking server...please wait 30s first time';let r=await fetch(API_URL+'/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:loginPhone.value,password:loginPass.value})});let d=await r.json();if(r.ok){localStorage.setItem('token',d.token);localStorage.setItem('user',JSON.stringify(d.user));location.href='./dashboard.html'}else msg.textContent=d.message}
-regForm.onsubmit=async(e)=>{e.preventDefault();msg.textContent='Creating...';let r=await fetch(API_URL+'/api/auth/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:regName.value,phone:regPhone.value,password:regPass.value})});let d=await r.json();if(r.ok){msg.textContent='Account created! Login now.';btnLogin.click()}else msg.textContent=d.message}
-if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js')}
+const API = "https://nyumba-tracker-1.onrender.com";
+
+async function login(){
+  const btn = document.getElementById('loginBtn');
+  const msg = document.getElementById('msg');
+  const warm = document.getElementById('warmMsg');
+  
+  btn.disabled = true;
+  btn.innerText = "Waking server...";
+  warm.innerText = "Please wait - Render is waking up (30 sec first time)";
+
+  try{
+    const res = await fetch(API+"/api/auth/login",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({
+        name: document.getElementById('nameInput').value,
+        password: document.getElementById('passInput').value
+      })
+    });
+    const data = await res.json();
+    if(!res.ok) throw new Error(data.message);
+    localStorage.setItem('user', JSON.stringify(data));
+    location.href = "dashboard.html";
+  }catch(e){
+    msg.innerText = e.message;
+    btn.disabled = false;
+    btn.innerText = "Login →";
+    warm.innerText = "Tip: Wait 30s and try again - free server sleeps";
+  }
+}
+// Keep alive every 14 mins
+setInterval(()=>fetch(API+"/health").catch(()=>{}), 14*60*1000);
 </script>
 </body>
 </html>
